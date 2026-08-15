@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Science Practice Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E1318;
+    --surface: #161D25;
+    --surface-2: #1D2630;
+    --border: #2A333D;
+    --text: #E8EDF2;
+    --text-muted: #8B98A5;
+    --accent: #5EEAD4;
+    --accent-dim: rgba(94,234,212,0.14);
+    --success: #4ADE80;
+    --success-dim: rgba(74,222,128,0.13);
+    --danger: #F87171;
+    --danger-dim: rgba(248,113,113,0.13);
+    --warning: #FBBF24;
+    --font-display: 'Space Grotesk', ui-sans-serif, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app{ max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 20px; border:1px solid var(--border); border-radius: 12px;
+    background: var(--surface); margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+  }
+  .topbar .brand{ display:flex; flex-direction:column; gap:2px; }
+  .topbar .brand .kicker{
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em;
+    color: var(--text-muted); text-transform: uppercase;
+  }
+  .topbar .brand h1{ font-family: var(--font-display); font-size: 19px; margin:0; font-weight:600; }
+  .live-metric{
+    font-family: var(--font-mono); font-size: 13px; color: var(--accent);
+    display:flex; align-items:center; gap:8px; background: var(--accent-dim);
+    border:1px solid rgba(94,234,212,0.3); padding: 8px 14px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .live-metric .dot{
+    width:7px; height:7px; border-radius:50%; background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(94,234,212,0.6); animation: pulse 1.8s infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .live-metric .dot{ animation: none; } }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(94,234,212,0.5); }
+    70%{ box-shadow: 0 0 0 7px rgba(94,234,212,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(94,234,212,0); }
+  }
+
+  /* ---------- Layout ---------- */
+  .layout{ display:grid; grid-template-columns: 240px 1fr; gap: 20px; align-items:start; }
+  @media (max-width: 760px){ .layout{ grid-template-columns: 1fr; } }
+
+  .sidebar{
+    border:1px solid var(--border); border-radius: 12px; background: var(--surface);
+    padding: 10px; position: sticky; top: 20px; display:flex; flex-direction:column; gap:4px;
+  }
+  @media (max-width: 760px){
+    .sidebar{ position:static; flex-direction:row; overflow-x:auto; gap:8px; }
+  }
+  .module-item{
+    display:flex; align-items:center; gap:10px; padding: 10px 12px; border-radius: 8px;
+    cursor: default; color: var(--text-muted); font-size: 13px; white-space:nowrap;
+  }
+  .module-item.active{ background: var(--surface-2); color: var(--text); }
+  .module-item .idx{
+    font-family: var(--font-mono); font-size: 11px; width: 20px; height:20px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; border:1px solid var(--border); flex-shrink:0;
+  }
+  .module-item.done .idx{ background: var(--success-dim); border-color: var(--success); color: var(--success); }
+  .module-item.active .idx{ border-color: var(--accent); color: var(--accent); }
+  .module-item .label{ display:flex; flex-direction:column; gap:1px; }
+  .module-item .label b{ font-weight:600; font-size:13px; }
+  .module-item .label span{ font-size:11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+  .panel{
+    border:1px solid var(--border); border-radius: 12px; background: var(--surface);
+    padding: 28px; min-height: 420px; display:flex; flex-direction:column;
+  }
+
+  /* ---------- Start screen ---------- */
+  .start{ text-align:left; display:flex; flex-direction:column; gap:18px; margin:auto 0; }
+  .start .eyebrow{ font-family: var(--font-mono); color: var(--accent); font-size: 12px; letter-spacing:.1em; text-transform:uppercase; }
+  .start h2{ font-family: var(--font-display); font-size: 30px; margin: 0; line-height:1.25; }
+  .start p{ color: var(--text-muted); max-width: 520px; line-height:1.6; margin:0; }
+  .start .stats{ display:flex; gap:22px; flex-wrap:wrap; margin-top: 4px; }
+  .start .stats div{ font-family: var(--font-mono); }
+  .start .stats .n{ font-size: 22px; color: var(--text); font-weight:600; }
+  .start .stats .l{ font-size: 11px; color: var(--text-muted); text-transform:uppercase; letter-spacing:.08em; }
+
+  /* ---------- Question ---------- */
+  .q-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 14px; }
+  .q-count{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .q-section{ font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+  .q-prompt{ font-size: 16px; line-height: 1.6; margin: 0 0 14px; }
+  pre.code{
+    font-family: var(--font-mono); font-size: 13px; line-height:1.55; background: #0B0F14;
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x:auto;
+    margin: 0 0 16px; color: #C9D5DE;
+  }
+  .options{ display:flex; flex-direction:column; gap: 10px; margin-top: 4px; }
+  .opt{
+    text-align:left; border:1px solid var(--border); background: var(--surface-2); color: var(--text);
+    border-radius: 9px; padding: 12px 14px; cursor:pointer; font-family: var(--font-body); font-size: 14px;
+    display:flex; gap:10px; align-items:flex-start; transition: border-color .15s, background .15s;
+  }
+  .opt:hover:not(:disabled){ border-color: var(--accent); }
+  .opt:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .opt .letter{
+    font-family: var(--font-mono); font-size:12px; color: var(--text-muted); border:1px solid var(--border);
+    width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;
+  }
+  .opt .otext{ flex:1; }
+  .opt .otext pre.code{ margin: 6px 0 0; padding: 10px 12px; font-size:12.5px; }
+  .opt.selected{ border-color: var(--accent); background: var(--accent-dim); }
+  .opt.selected .letter{ border-color: var(--accent); color: var(--accent); background: rgba(94,234,212,0.12); }
+  .opt.correct{ border-color: var(--success); background: var(--success-dim); }
+  .opt.correct .letter{ border-color: var(--success); color: var(--success); }
+  .opt.incorrect{ border-color: var(--danger); background: var(--danger-dim); }
+  .opt.incorrect .letter{ border-color: var(--danger); color: var(--danger); }
+  .opt.dim{ opacity: .5; }
+
+  .review-item .note{ color: var(--text-muted); display:block; margin-top:6px; font-style: italic; font-size:12px; }
+  .review-item{ display:flex; flex-direction:column; gap:6px; }
+  .status-badge{
+    display:inline-flex; align-items:center; gap:6px; font-family: var(--font-mono); font-size: 11px;
+    letter-spacing:.05em; text-transform:uppercase; padding: 3px 9px; border-radius: 999px; width:fit-content;
+  }
+  .status-badge.ok{ background: var(--success-dim); color: var(--success); border:1px solid rgba(74,222,128,.35); }
+  .status-badge.no{ background: var(--danger-dim); color: var(--danger); border:1px solid rgba(248,113,113,.35); }
+  .review-item.is-correct{ border-color: rgba(74,222,128,.3); }
+  .review-item.is-wrong{ border-color: rgba(248,113,113,.3); }
+
+  .actions{ margin-top: auto; padding-top: 20px; display:flex; justify-content:flex-end; }
+  .btn:disabled{ opacity:.35; cursor:default; }
+  .btn{
+    font-family: var(--font-body); font-weight:600; font-size: 14px; border-radius: 8px; padding: 11px 20px;
+    border:1px solid transparent; cursor:pointer; transition: transform .1s, opacity .15s;
+  }
+  .btn:active{ transform: scale(.98); }
+  .btn-primary{ background: var(--accent); color: #06231E; }
+  .btn-primary:disabled{ opacity:.35; cursor:default; }
+  .btn-ghost{ background: transparent; border-color: var(--border); color: var(--text); }
+
+  /* ---------- Results ---------- */
+  .results{ display:flex; flex-direction:column; gap: 24px; }
+  .score-hero{ display:flex; align-items:baseline; gap: 16px; flex-wrap:wrap; }
+  .score-hero .big{ font-family: var(--font-display); font-size: 52px; font-weight:700; color: var(--accent); }
+  .score-hero .of{ font-family: var(--font-mono); color: var(--text-muted); font-size:14px; }
+  .bars{ display:flex; flex-direction:column; gap: 12px; }
+  .bar-row{ display:grid; grid-template-columns: 150px 1fr 46px; align-items:center; gap: 12px; }
+  .bar-row .name{ font-size: 13px; color: var(--text-muted); }
+  .bar-track{ height: 8px; background: var(--surface-2); border-radius: 999px; overflow:hidden; }
+  .bar-fill{ height:100%; background: var(--accent); border-radius:999px; }
+  .bar-row .pct{ font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align:right; }
+
+  .review{ display:flex; flex-direction:column; gap: 10px; }
+  .review h3{ font-family: var(--font-display); font-size: 16px; margin: 4px 0 2px; }
+  .review-item{ border:1px solid var(--border); border-radius: 9px; padding: 12px 14px; background: var(--surface-2); }
+  .review-item .rq{ font-size: 13.5px; margin-bottom:6px; }
+  .review-item .ra{ font-size: 12.5px; color: var(--text-muted); }
+  .review-item .ra b{ color: var(--success); }
+  .review-empty{ color: var(--text-muted); font-size: 13.5px; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="kicker">Practice Run · 39 questions</span>
+      <h1>Data Science &amp; ML Quiz</h1>
+    </div>
+    <div class="live-metric" id="liveMetric">
+      <span class="dot"></span>
+      <span id="liveMetricText">ANSWERED: 0 / 39</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar"></nav>
+
+    <div class="panel" id="panel">
+      <!-- Start screen -->
+      <div class="start" id="startScreen">
+        <span class="eyebrow">Before you begin</span>
+        <h2>One pass, six modules, full results at the end.</h2>
+        <p>Covers Logistic Regression, Python &amp; loops, the data science lifecycle, data cleaning, KNN, and pandas. Move freely between questions with Previous / Next, then submit to see your score, section breakdown, and every correct answer.</p>
+        <div class="stats">
+          <div><div class="n">39</div><div class="l">Questions</div></div>
+          <div><div class="n">6</div><div class="l">Modules</div></div>
+          <div><div class="n">~15</div><div class="l">Minutes</div></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; max-width:320px; margin-top:6px;">
+          <label for="studentId" style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em;">Student ID</label>
+          <input type="text" id="studentId" placeholder="e.g. 22010123" style="background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:11px 12px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; max-width:320px; margin-top:6px;">
+          <label for="studentName" style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em;">Your full name</label>
+          <input type="text" id="studentName" placeholder="e.g. Youssef Ahmed" style="background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:11px 12px; color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+          <span id="nameError" class="hidden" style="color:var(--danger); font-size:12px;">Please enter your ID and name before starting.</span>
+        </div>
+        <div class="actions" style="padding-top:6px;">
+          <button class="btn btn-primary" id="startBtn">Start quiz</button>
+        </div>
+      </div>
+
+      <!-- Question screen -->
+      <div class="hidden" id="quizScreen" style="display:flex; flex-direction:column; flex:1;">
+        <div class="q-head">
+          <span class="q-section" id="qSection"></span>
+          <span class="q-count" id="qCount"></span>
+        </div>
+        <div id="qCodeWrap"></div>
+        <p class="q-prompt" id="qPrompt"></p>
+        <div class="options" id="qOptions"></div>
+        <div class="actions" style="justify-content:space-between;">
+          <button class="btn btn-ghost" id="prevBtn">Previous</button>
+          <button class="btn btn-primary" id="nextBtn">Next question</button>
+        </div>
+      </div>
+
+      <!-- Results screen -->
+      <div class="hidden" id="resultsScreen">
+        <div class="results">
+          <div>
+            <span class="eyebrow" id="resultsEyebrow" style="color:var(--accent); font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;">Run complete</span>
+            <div class="score-hero">
+              <span class="big" id="scoreBig">0%</span>
+              <span class="of" id="scoreOf">0 / 39 correct</span>
+            </div>
+          </div>
+          <div class="bars" id="sectionBars"></div>
+          <div class="review">
+            <h3>Answer review</h3>
+            <div id="reviewList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  { id:'logreg',    title:'Logistic Regression',      tagline:'Sigmoid, loss & metrics' },
+  { id:'python',    title:'Python & Loops',            tagline:'Trace the code' },
+  { id:'lifecycle', title:'DS Lifecycle',              tagline:'Collection to deployment' },
+  { id:'cleaning',  title:'Data Cleaning',             tagline:'Missing values & outliers' },
+  { id:'knn',       title:'K-Nearest Neighbors',       tagline:'Lazy, distance-based' },
+  { id:'pandas',    title:'Pandas',                    tagline:'Indexing & grouping' },
+];
+
+const QUESTIONS = [
+// ---------------- Logistic Regression ----------------
+{ section:'logreg', prompt:"According to the presentation, why is Logistic Regression preferred over Linear Regression for classification tasks regarding its equation and loss function?",
+  options:[
+    "Linear Regression uses the Sigmoid function, which struggles with continuous values.",
+    "Logistic Regression uses Mean Squared Error which is more robust to outliers.",
+    "Logistic Regression uses Log Loss (Binary Cross-Entropy) and a Sigmoid function to map predictions to probabilities between 0 and 1.",
+    "Linear Regression directly predicts probability, but Logistic Regression uses a threshold without calculating probability."
+  ], correct:2, note:"Ref: slides 37, 39, 51." },
+{ section:'logreg', prompt:"Imagine a dataset where 85% of instances belong to Class A and 15% to Class B. A model incorrectly classifies ALL Class B instances but still achieves 85% accuracy. What evaluation approach is recommended to reveal this hidden failure?",
+  options:[
+    "Increasing the Learning Rate of Gradient Descent.",
+    "Using a Confusion Matrix to see the breakdown of correctly and incorrectly classified instances for all classes.",
+    "Switching the algorithm to Polynomial Regression.",
+    "Relying solely on the True Negative (TN) metric."
+  ], correct:1, note:"Ref: slide 53 — why the confusion matrix matters." },
+{ section:'logreg', prompt:'In the presentation\'s example of predicting whether an animal is a "Cat" (Positive class) or a "Dog" (Negative class), what exactly does a Type 2 Error (False Negative) represent?',
+  options:[
+    "Predicting the animal is a cat, but it is actually a dog.",
+    "Predicting the animal is a dog, and it is actually a dog.",
+    "Predicting the animal is not a cat (a dog), but it actually is a cat.",
+    "Predicting the animal is a cat, and it actually is a cat."
+  ], correct:2, note:"Ref: slide 58 — False Negative / Type 2 Error definition." },
+{ section:'logreg', prompt:"You want to evaluate a model where it's crucial that out of all the positive predictions you make, the highest possible number are actually correct. Which metric directly measures this?",
+  options:["Accuracy","Recall (Sensitivity)","Precision","F1-Score"],
+  correct:2, note:"Ref: slide 60 — precision measures correctness among predicted positives." },
+{ section:'logreg', prompt:"When evaluating a Logistic Regression model on an imbalanced dataset, why might you choose the F1-Score over Precision or Recall individually?",
+  options:[
+    "It simply measures how often the classifier makes the correct prediction overall.",
+    "It provides a harmonic mean that balances both Precision and Recall.",
+    "It minimizes the Mean Squared Error (MSE) directly.",
+    "It completely ignores False Positives and False Negatives."
+  ], correct:1, note:"Ref: slide 62 — F1-Score definition." },
+{ section:'logreg', prompt:'Logistic regression produces a non-linear S-curve (Sigmoid) to output probabilities. The presentation mentions a "Linearity Assumption" — what exactly does it assume is linear?',
+  options:[
+    "The relationship between the independent variables and the categorical output labels directly.",
+    "The decision boundary separating multiple classes in a Multi-Label classification task.",
+    "The relationship between the independent variables and the log-odds.",
+    "The gradient descent learning rate decay over time."
+  ], correct:2, note:"Ref: slides 50–51 — linearity assumption." },
+{ section:'logreg', prompt:'During Gradient Descent, what is the logical consequence of choosing a learning rate (Alpha) that is excessively "Big"?',
+  options:[
+    "The model will reach convergence much faster and more stably.",
+    "The model may fail to converge, taking overly large steps that overshoot the minimum error point.",
+    "The Sigmoid function will output values outside the 0 to 1 range.",
+    "The algorithm will automatically switch to a small learning rate."
+  ], correct:1, note:"Ref: slides 20 & 41." },
+{ section:'logreg', prompt:'If you\'re building a model to categorize movies, and a single movie can be classified simultaneously as both "Action" AND "Comedy", which classification type are you dealing with?',
+  options:["Binary Classification","Multi-Class Classification (only one output class at a time)","Multi-Label Classification (can have multiple output classes at once)","Polynomial Classification"],
+  correct:2, note:"Ref: slide 34 — multi-label text classification example." },
+{ section:'logreg', prompt:"Based on the description of the Cost Function for Logistic Regression (Log Loss / Cross-Entropy), what is its primary logical goal?",
+  options:[
+    "To find the best fitting straight line by minimizing the squared differences.",
+    "To ensure the decision boundary threshold strictly remains at 0.5.",
+    "To encourage the model to output high probabilities for correct labels.",
+    "To calculate the harmonic mean of True Positives and False Positives."
+  ], correct:2, note:"Ref: slide 39." },
+{ section:'logreg', prompt:'A data scientist applies Logistic Regression to a dataset where the features form a highly complex, circular pattern rather than being linearly separable. Based on the "Disadvantages" discussed, what is the expected outcome?',
+  options:[
+    "The model will struggle because it struggles with non-linear problems and assumes a linear relationship.",
+    "The model will automatically apply Polynomial Regression to fit the circular pattern.",
+    "The Log Loss function will perfectly adapt to the outliers in the circular data.",
+    "The model will switch to a Multi-Label classification task to resolve the issue."
+  ], correct:0, note:"Ref: slide 50 — disadvantages of logistic regression." },
+
+// ---------------- Python & Loops ----------------
+{ section:'python', prompt:"A program should: examine numbers from 1 through 20, ignore multiples of 3, add the remaining numbers, then print the final sum. Which implementation is correct?",
+  options:[
+`total = 0
+for i in range(1, 20):
+    if i % 3 == 0:
+        continue
+    total += i
+print(total)`,
+`total = 0
+for i in range(1, 21):
+    if i % 3 == 0:
+        continue
+    total += i
+print(total)`,
+`total = 0
+for i in range(1, 21):
+    if i % 3 != 0:
+        continue
+    total += i
+print(total)`,
+`total = 0
+for i in range(20):
+    if i % 3 == 0:
+        continue
+    total += i
+print(total)`
+  ], correct:1, note:"range(1, 21) is needed to include 20, and continue must skip multiples of 3 (i % 3 == 0)." },
+{ section:'python', prompt:"A Linear Regression model trained with Gradient Descent has its learning rate changed from 0.01 to 0.1. Assuming everything else stays the same, which statement is MOST accurate?",
+  options:[
+    "The model is guaranteed to reach the optimal parameters 10× faster.",
+    "The model will always have lower training error after every iteration.",
+    "The parameter updates become larger, which may speed up learning but can also cause overshooting or instability.",
+    "The slope of the regression line automatically becomes 10× larger."
+  ], correct:2 },
+{ section:'python', prompt:"A simple linear regression model is: y_hat = 12 + 3x. If x increases by 4 units, what happens to the predicted value of y?",
+  options:["It increases by 12","It increases by 3","It increases by 4","It increases by 15"],
+  correct:0, note:"Slope × Δx = 3 × 4 = 12." },
+{ section:'python', prompt:"A regression model is: y_hat = 100 - 2.5x. Which interpretation is MOST accurate?",
+  options:[
+    "For every 1-unit increase in x, the actual y decreases by 2.5.",
+    "For every 1-unit increase in x, the predicted y decreases by 2.5.",
+    "The correlation between x and y must be exactly -2.5.",
+    "When x = 0, y must equal 100 in the original dataset."
+  ], correct:1, note:"The coefficient describes the predicted (fitted) value, not the actual observed y." },
+{ section:'python', prompt:"What is the output?",
+  code:`total = 0
+for i in range(1, 10):
+    if i % 3 == 0:
+        continue
+    total += i
+print(total)`,
+  options:["30","24","27","45"], correct:2, note:"1+2+4+5+7+8 = 27." },
+{ section:'python', prompt:"What is the output?",
+  code:`x = 0
+for i in range(1, 5):
+    for j in range(1, 4):
+        if j == 2:
+            continue
+        x += i
+print(x)`,
+  options:["20","24","16","30"], correct:0, note:"Each i is added twice (j=1 and j=3): 2×(1+2+3+4) = 20." },
+{ section:'python', prompt:"Which statement is TRUE about this loop?",
+  code:`for i in range(2, 11, 3):
+    print(i)`,
+  options:["It prints 2, 5, 8, 11","It prints 2, 5, 8","It prints 3, 6, 9","It prints 2, 4, 6, 8, 10"],
+  correct:1, note:"Stop value 11 is exclusive, so the sequence is 2, 5, 8." },
+{ section:'python', prompt:"What is the output?",
+  code:`def calculate(a, b=5):
+    if a > b:
+        return a - b
+    return a + b
+x = calculate(8)
+y = calculate(3)
+print(x + y)`,
+  options:["11","10","9","13"], correct:0,
+  note:"x = calculate(8): 8>5 → 8-5=3. y = calculate(3): 3>5 is False → 3+5=8. x+y=11. (Adjusted to calculate(3) here — the original wording had calculate(3, 2), whose literal result, 4, doesn't match any of the four choices.)" },
+{ section:'python', prompt:"What is printed?",
+  code:`def process(x):
+    x = x + 2
+    if x % 2 == 0:
+        return x * 2
+    else:
+        return x + 3
+print(process(5))`,
+  options:["10","14","12","7"], correct:0, note:"x = 5+2 = 7 (odd) → return 7+3 = 10." },
+
+// ---------------- Data Science Lifecycle ----------------
+{ section:'lifecycle', prompt:"A data scientist receives data from multiple databases and sensors. Before analyzing correlations, she discovers duplicated records, missing values, and errors. She removes these problems and immediately trains a machine-learning model without investigating patterns or correlations. Which lifecycle stage was skipped?",
+  options:["Data Collection","Data Cleaning","Data Exploration & Analysis","Evaluation"], correct:2 },
+{ section:'lifecycle', prompt:"A student wants to perform numerical operations efficiently on collections of numbers rather than repeatedly relying on ordinary Python loops. Which choice is MOST appropriate?",
+  options:["VS Code","NumPy","Matplotlib","Scikit-learn"], correct:1 },
+{ section:'lifecycle', prompt:"A company has collected, cleaned, and explored its data, and built a machine-learning model. They want to determine whether its performance is reliable before presenting results to management through a dashboard. What should happen immediately before deployment?",
+  options:["Data Collection","Data Cleaning","Evaluation","Model Building"], correct:2 },
+
+// ---------------- Data Cleaning ----------------
+{ section:'cleaning', prompt:"A dataset contains a numerical column Age with 8% missing values. The mean age is 35, but the distribution is highly right-skewed due to a few very old customers. What is the most appropriate approach?",
+  options:["Replace missing values with the mean","Replace missing values with the median","Replace missing values with zero","Remove the entire column"],
+  correct:1, note:"Skewed distributions make the median more robust than the mean." },
+{ section:'cleaning', prompt:"A column Salary contains: 3000, 3500, 4000, 4200, 4500, 4800, 5000, 200000. The value 200000 is real and was entered correctly. If preparing the data for a Linear Regression model, what's the best approach?",
+  options:["Delete the row containing the outlier","Replace the outlier with the mean","Apply capping or another robust treatment","Replace the outlier with zero"], correct:2 },
+{ section:'cleaning', prompt:"A dataset contains 10,000 rows, and 500 rows are exact duplicates. What is the main reason for removing these duplicate rows?",
+  options:["To reduce the number of missing values","To prevent repeated records from affecting the analysis","To convert categorical values into numerical values","To reduce the number of outliers"], correct:1 },
+{ section:'cleaning', prompt:"A column Gender contains: Male, male, M, Female, female, F, MALE. What is the best cleaning strategy?",
+  options:["Delete rows with lowercase values","Replace categories with their frequency","Standardize the category representations","Apply StandardScaler to the column"], correct:2 },
+{ section:'cleaning', prompt:'You have a column Price containing: "1000", "2500", "3000", "N/A", "4500". What is the best approach before performing numerical calculations?',
+  options:["Convert the column directly to int",'Handle "N/A" before numerical conversion',"Remove the entire column from the dataset","Apply One-Hot Encoding to the column"], correct:1 },
+{ section:'cleaning', prompt:"A dataset contains an Age column with: 21, 25, 32, -5, 28, 150, 34. What should you do first before deciding how to handle -5 and 150?",
+  options:["Replace them with the mean","Delete the rows containing them","Check whether they are data-entry errors","Apply Min-Max Scaling to the column"], correct:2 },
+{ section:'cleaning', prompt:"A categorical column Education contains: High School, Bachelor, Master, PhD. Which encoding is most appropriate if the categories have a meaningful order?",
+  options:["One-Hot Encoding","Ordinal Encoding","StandardScaler","Frequency Encoding"], correct:1 },
+
+// ---------------- KNN ----------------
+{ section:'knn', prompt:"In KNN, when does the actual computation take place?",
+  options:["During the training phase","During data preprocessing","During the prediction phase","Before the dataset is loaded"], correct:2 },
+{ section:'knn', prompt:"What type of learner is KNN classified as?",
+  options:["Eager Learner","Lazy Learner","Reinforcement Learner","Ensemble Learner"], correct:1 },
+{ section:'knn', prompt:"As the number of features (dimensions) increases significantly while the number of data points stays fixed, what problem typically occurs in KNN?",
+  options:["Overfitting only","Curse of Dimensionality","Underfitting due to lack of features","Increased training time"], correct:1 },
+{ section:'knn', prompt:"Why is choosing an odd number for K often recommended in binary classification problems?",
+  options:["It reduces computational cost","It helps avoid ties in the majority voting step","It guarantees higher accuracy","It eliminates the need for distance calculation"], correct:1 },
+{ section:'knn', prompt:'Which of the following correctly orders the KNN process from first to last?',
+  options:["Calculate Distances → Choose K → Predict → Find Nearest Neighbors","Choose K → Calculate Distances → Find Nearest Neighbors → Predict","Find Nearest Neighbors → Choose K → Calculate Distances → Predict","Choose K → Find Nearest Neighbors → Calculate Distances → Predict"], correct:1 },
+
+// ---------------- Pandas ----------------
+{ section:'pandas', prompt:"What happens here?",
+  code:`df = pd.DataFrame({'x': range(5)})
+df.set_index('x', inplace=True)
+df.index = df.index.astype('int32')
+print(df.index.dtype)`,
+  options:["int64, astype is ignored on an index","int32, the index dtype is actually changed","Raises a TypeError","Always becomes float64"], correct:1 },
+{ section:'pandas', prompt:"What's the problem here?",
+  code:`df[df['A'] > 0]['B'] = 5`,
+  options:["This reliably updates df['B']","It may silently fail because it operates on a temporary copy (chained indexing)","It raises a KeyError immediately","This is the recommended way to filter and assign"],
+  correct:1, note:"Correct way: df.loc[df['A']>0, 'B'] = 5" },
+{ section:'pandas', prompt:"What's the output of this code?",
+  code:`df = pd.DataFrame({'a':[1,1,2,2],'b':[10,20,30,40]})
+df.groupby('a')['b'].transform('sum')`,
+  options:["A Series with only 2 rows (one per group)","A Series with 4 rows, same length as df, each row showing its group's sum","A DataFrame with a MultiIndex","Raises a ValueError"], correct:1 },
+{ section:'pandas', prompt:"Which line best reduces memory for a low-cardinality string column (e.g. \"active\"/\"inactive\")?",
+  code:`df['status'] = df['status'].astype(___)`,
+  options:["'string'","'category'","'object'","'str'"], correct:1 },
+{ section:'pandas', prompt:"What's the risk with this code if the index isn't sorted?",
+  code:`df.set_index('date').resample('D').mean()`,
+  options:["No risk, resample sorts automatically","It can produce wrong bins or raise an error, since resample assumes a monotonic index","Always raises an IndexError","It ignores the index entirely"],
+  correct:1, note:"Use sort_index() before resampling." },
+];
+
+// ---------------- Google Sheet submission ----------------
+// 1. Deploy the provided Apps Script as a Web App (see setup instructions).
+// 2. Paste the deployment URL below, between the quotes.
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzKtf0lBzj4uMM7cLSGaeChJY-HQ6KmGcyY7IoG217x3xCoipEXZSN1o1qGQQxKZvrb/exec";
+
+function submitToSheet(payload){
+  if(!GAS_URL || GAS_URL.includes('PASTE_YOUR')) {
+    console.warn('GAS_URL not set — results were NOT sent to Google Sheets.');
+    return;
+  }
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors', // Apps Script doesn't return CORS headers; this just fires the request
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).catch(()=>{ /* fail silently so a network hiccup doesn't block the student's results screen */ });
+}
+
+// ---------------- Shuffling ----------------
+function shuffleArray(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Shuffles question order within each section, but keeps the sections themselves
+// in the same order (Logistic Regression, then Python, etc.) so the sidebar modules
+// still make sense. Called fresh for every student when they click Start.
+function getShuffledQuestions(){
+  const bySection = {};
+  SECTIONS.forEach(s => bySection[s.id] = []);
+  QUESTIONS.forEach(q => bySection[q.section].push(q));
+  let result = [];
+  SECTIONS.forEach(s => { result = result.concat(shuffleArray(bySection[s.id].slice())); });
+  return result;
+}
+
+// ---------------- App state ----------------
+let current = 0;
+let studentName = '';
+let studentId = '';
+let sessionQuestions = QUESTIONS; // replaced with a freshly-shuffled copy when the student clicks Start
+const selected = new Array(QUESTIONS.length).fill(null); // chosen option index, or null
+let results = null; // filled in on submit: array of true/false, same length as QUESTIONS
+
+const sidebarEl = document.getElementById('sidebar');
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultsScreen = document.getElementById('resultsScreen');
+const liveMetricText = document.getElementById('liveMetricText');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function sectionQuestionIndices(sectionId){
+  const idxs = [];
+  sessionQuestions.forEach((q,i)=>{ if(q.section===sectionId) idxs.push(i); });
+  return idxs;
+}
+
+function renderSidebar(){
+  sidebarEl.innerHTML = '';
+  SECTIONS.forEach((s, i)=>{
+    const idxs = sectionQuestionIndices(s.id);
+    const answered = idxs.filter(i=>selected[i]!==null).length;
+    const isCurrentSection = sessionQuestions[current] && sessionQuestions[current].section === s.id;
+    const done = answered === idxs.length;
+    const div = document.createElement('div');
+    div.className = 'module-item' + (isCurrentSection && resultsScreen.classList.contains('hidden') ? ' active' : '') + (done ? ' done' : '');
+    div.innerHTML = `
+      <span class="idx">${done ? '✓' : i+1}</span>
+      <span class="label"><b>${s.title}</b><span>${answered}/${idxs.length} · ${s.tagline}</span></span>
+    `;
+    sidebarEl.appendChild(div);
+  });
+}
+
+function updateLiveMetric(){
+  if(results){
+    const correct = results.filter(r=>r===true).length;
+    const pct = Math.round((correct/sessionQuestions.length)*100);
+    liveMetricText.textContent = `ACCURACY: ${pct}%  (${correct}/${sessionQuestions.length})`;
+    return;
+  }
+  const answered = selected.filter(r=>r!==null).length;
+  liveMetricText.textContent = answered===0 ? 'ANSWERED: 0 / ' + sessionQuestions.length : `ANSWERED: ${answered} / ${sessionQuestions.length}`;
+}
+
+function renderQuestion(){
+  const q = sessionQuestions[current];
+  const sec = SECTIONS.find(s=>s.id===q.section);
+  document.getElementById('qSection').textContent = sec.title;
+  document.getElementById('qCount').textContent = `Question ${current+1} / ${sessionQuestions.length}`;
+  document.getElementById('qPrompt').textContent = q.prompt;
+
+  const codeWrap = document.getElementById('qCodeWrap');
+  codeWrap.innerHTML = '';
+  if(q.code){
+    const pre = document.createElement('pre');
+    pre.className = 'code';
+    pre.textContent = q.code;
+    codeWrap.appendChild(pre);
+  }
+
+  const optsEl = document.getElementById('qOptions');
+  optsEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (selected[current] === i ? ' selected' : '');
+    const isCode = opt.includes('\n');
+    btn.innerHTML = `<span class="letter">${letters[i]}</span><span class="otext">${isCode ? '' : escapeHtml(opt)}</span>`;
+    if(isCode){
+      const pre = document.createElement('pre');
+      pre.className = 'code';
+      pre.textContent = opt;
+      btn.querySelector('.otext').appendChild(pre);
+    }
+    btn.addEventListener('click', ()=> selectAnswer(i));
+    optsEl.appendChild(btn);
+  });
+
+  prevBtn.disabled = current === 0;
+  nextBtn.textContent = current === sessionQuestions.length - 1 ? 'Submit quiz' : 'Next question';
+  updateLiveMetric();
+  renderSidebar();
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function selectAnswer(choiceIdx){
+  selected[current] = choiceIdx;
+  const optButtons = document.querySelectorAll('#qOptions .opt');
+  optButtons.forEach((btn, i)=> btn.classList.toggle('selected', i === choiceIdx));
+  updateLiveMetric();
+  renderSidebar();
+}
+
+prevBtn.addEventListener('click', ()=>{
+  if(current > 0){
+    current--;
+    renderQuestion();
+  }
+});
+
+nextBtn.addEventListener('click', ()=>{
+  if(current < sessionQuestions.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    submitQuiz();
+  }
+});
+
+async function checkIfAlreadySubmitted(id){
+  if(!GAS_URL || GAS_URL.includes('PASTE_YOUR')) return false; // sheet not configured — don't block
+  try{
+    const res = await fetch(GAS_URL + '?id=' + encodeURIComponent(id));
+    const data = await res.json();
+    return !!data.exists;
+  }catch(err){
+    console.warn('Could not verify previous submission — letting the student proceed.', err);
+    return false; // fail open so a network hiccup never locks a real student out
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', async ()=>{
+  const idInput = document.getElementById('studentId');
+  const nameInput = document.getElementById('studentName');
+  const id = idInput.value.trim();
+  const name = nameInput.value.trim();
+  const errEl = document.getElementById('nameError');
+  if(!id || !name){
+    errEl.textContent = 'Please enter your ID and name before starting.';
+    errEl.classList.remove('hidden');
+    idInput.style.borderColor = id ? 'var(--border)' : 'var(--danger)';
+    nameInput.style.borderColor = name ? 'var(--border)' : 'var(--danger)';
+    (id ? nameInput : idInput).focus();
+    return;
+  }
+  errEl.classList.add('hidden');
+  idInput.style.borderColor = 'var(--border)';
+  nameInput.style.borderColor = 'var(--border)';
+
+  const startBtn = document.getElementById('startBtn');
+  const originalLabel = startBtn.textContent;
+  startBtn.disabled = true;
+  startBtn.textContent = 'Checking…';
+
+  const alreadyTaken = await checkIfAlreadySubmitted(id);
+
+  startBtn.disabled = false;
+  startBtn.textContent = originalLabel;
+
+  if(alreadyTaken){
+    errEl.textContent = 'This Student ID has already submitted the quiz. Each student can only take it once.';
+    errEl.classList.remove('hidden');
+    idInput.style.borderColor = 'var(--danger)';
+    idInput.focus();
+    return;
+  }
+
+  studentId = id;
+  studentName = name;
+  sessionQuestions = getShuffledQuestions();
+  startScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  renderQuestion();
+});
+
+function submitQuiz(){
+  results = sessionQuestions.map((q,i)=> selected[i] === q.correct);
+  showResults();
+}
+
+function showResults(){
+  quizScreen.classList.add('hidden');
+  resultsScreen.classList.remove('hidden');
+
+  const correctCount = results.filter(r=>r===true).length;
+  const pct = Math.round((correctCount/sessionQuestions.length)*100);
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreOf').textContent = `${correctCount} / ${sessionQuestions.length} correct`;
+  document.getElementById('resultsEyebrow').textContent = 'Run complete — ' + studentName + ' (' + studentId + ')';
+
+  const barsEl = document.getElementById('sectionBars');
+  barsEl.innerHTML = '';
+  const sectionScores = {};
+  SECTIONS.forEach(s=>{
+    const idxs = sectionQuestionIndices(s.id);
+    const c = idxs.filter(i=>results[i]===true).length;
+    const p = Math.round((c/idxs.length)*100);
+    sectionScores[s.title] = `${c}/${idxs.length}`;
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <span class="name">${s.title}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${p}%"></span></span>
+      <span class="pct">${c}/${idxs.length}</span>
+    `;
+    barsEl.appendChild(row);
+  });
+
+  submitToSheet({
+    id: studentId,
+    name: studentName,
+    score: correctCount,
+    total: sessionQuestions.length,
+    percentage: pct,
+    sections: sectionScores,
+    timestamp: new Date().toISOString()
+  });
+
+  const reviewEl = document.getElementById('reviewList');
+  reviewEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  const shortOpt = (opt)=> escapeHtml(opt.split('\n')[0]) + (opt.includes('\n') ? ' …' : '');
+  sessionQuestions.forEach((q,i)=>{
+    const isCorrect = results[i] === true;
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (isCorrect ? 'is-correct' : 'is-wrong');
+    const yourAnswer = selected[i] === null
+      ? 'No answer selected'
+      : `${letters[selected[i]]}) ${shortOpt(q.options[selected[i]])}`;
+    div.innerHTML = `
+      <span class="status-badge ${isCorrect ? 'ok' : 'no'}">${isCorrect ? '✓ Correct' : '✗ Incorrect'}</span>
+      <div class="rq">Q${i+1}. ${escapeHtml(q.prompt)}</div>
+      <div class="ra">Your answer: ${yourAnswer}</div>
+      ${isCorrect ? '' : `<div class="ra">Correct answer: <b>${letters[q.correct]}) ${shortOpt(q.options[q.correct])}</b></div>`}
+      ${(!isCorrect && q.note) ? `<span class="note">${escapeHtml(q.note)}</span>` : ''}
+    `;
+    reviewEl.appendChild(div);
+  });
+  renderSidebar();
+}
+
+renderSidebar();
+</script>
+</body>
+</html>
